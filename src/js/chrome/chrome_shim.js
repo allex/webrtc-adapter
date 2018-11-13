@@ -629,7 +629,7 @@ module.exports = {
             },
             function(err) {
               if (args[1]) {
-                args[1].apply(null, err);
+                args[1].apply(null, [err]);
               }
             }, arguments[2]
           ]);

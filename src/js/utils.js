@@ -176,5 +176,61 @@ module.exports = {
     }
 
     return result;
+  },
+
+  // Fix urls not supports in some older browsers. (by @allex_wang)
+  wrapPeerConnectionCtor: function(window) {
+    var RTCPeerConnection = window.RTCPeerConnection
+    if (!RTCPeerConnection) {
+      return;
+    }
+
+    var test = function(F, pcConfig) {
+      try { new F(pcConfig); }
+      catch (e) { return false; }
+      return true
+    }
+
+    var testIceServers = { iceServers: [ { urls: 'stun:stun.iallex.com' } ] }
+    if (!test(RTCPeerConnection, testIceServers)) {
+
+      var T = function(pcConfig, pcConstraints) {
+        // .urls is not supported in FF < 38 and chrome < 31.
+        // create RTCIceServers with a single url.
+        if (pcConfig && pcConfig.iceServers) {
+          var newIceServers = [];
+          for (var i = 0; i < pcConfig.iceServers.length; i++) {
+            var server = pcConfig.iceServers[i];
+            if (server.hasOwnProperty('urls')) {
+              // https://developer.mozilla.org/en-US/docs/Web/API/RTCIceServer/urls
+              var urls = server.urls;
+              urls = typeof urls === 'string' ? [ urls ] : urls;
+              for (var j = 0; j < urls.length; j++) {
+                var newServer = {
+                  url: urls[j]
+                };
+                if (urls[j].indexOf('turn') === 0) {
+                  newServer.username = server.username;
+                  newServer.credential = server.credential;
+                }
+                newIceServers.push(newServer);
+              }
+            } else {
+              newIceServers.push(pcConfig.iceServers[i]);
+            }
+          }
+          pcConfig.iceServers = newIceServers;
+        }
+        return new RTCPeerConnection(pcConfig, pcConstraints);
+      }
+
+      if (test(T, testIceServers)) {
+        T.prototype = RTCPeerConnection.prototype;
+        T.prototype.constructor = T;
+        window.RTCPeerConnection = T;
+      }
+    }
+
+    return window.RTCPeerConnection;
   }
 };

@@ -10,6 +10,7 @@
 'use strict';
 
 var utils = require('./utils');
+
 // Shimming starts here.
 module.exports = function(dependencies, opts) {
   var window = dependencies && dependencies.window;
@@ -149,6 +150,8 @@ module.exports = function(dependencies, opts) {
       logging('Unsupported browser!');
       break;
   }
+
+  utils.wrapPeerConnectionCtor(window);
 
   return adapter;
 };
