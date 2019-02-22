@@ -1,5 +1,5 @@
 {
-  "name": "webrtc-adapter",
+  "name": "@allex/webrtc-adapter",
   "version": "6.4.4",
   "description": "A shim to insulate apps from WebRTC spec changes and browser prefix differences",
   "license": "BSD-3-Clause",
